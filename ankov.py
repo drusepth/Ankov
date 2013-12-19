@@ -1,8 +1,10 @@
+# feels so java in here
 import praw
 import time
 import random
 import signal
 import sys
+import re
 
 import markovgen
 import settings
@@ -43,6 +45,11 @@ while True:
 
       try:
         response = markov.generate_markov_text(response_length + random.randint(-5, 5))
+
+        # Apply some filters to humanize the text
+        response = response.lower()
+        response = re.sub("[\.\:;\(\)\"\*]", "", response, 0, 0)
+
         if len(response) > 0:
 
           print('Responding')
