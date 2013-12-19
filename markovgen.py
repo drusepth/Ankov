@@ -1,4 +1,5 @@
 import random
+import pickle
  
 class Markov(object):
 
@@ -6,6 +7,16 @@ class Markov(object):
     self.cache = {}
     self.words = []
     self.word_size = 0
+
+  def save(self):
+    with open('pickle/words', 'r+') as serialize:
+      pickle.dump(self.words, serialize)
+
+  def load(self):
+    with open('pickle/words') as serialize:
+      self.words = pickle.load(serialize)
+      self.word_size = len(self.words)
+      self.database()
 
   def add_from_string(self, string):
     self.words += string.split()
@@ -24,10 +35,6 @@ class Markov(object):
     words = data.split()
     return words
 
-  """ Generates triples from the given data string. So if our string were
-      "What a lovely day", we'd generate (What, a, lovely) and then
-      (a, lovely, day).
-  """
   def triples(self):
     if len(self.words) < 3:
       return
