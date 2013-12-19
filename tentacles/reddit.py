@@ -23,7 +23,10 @@ def start():
   #todo share this across all tentacles
   print('Building starter markov dictionary')
   markov = markovgen.Markov()
-  markov.load()
+  try:
+    markov.load()
+  except:
+    markov.add_from_string("Hello")
   print('Good to go')
 
   print('Logging in to Reddit')
