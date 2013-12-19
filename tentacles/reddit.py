@@ -77,4 +77,4 @@ def start():
     markov.save()
 
     print('And sleeping until later')
-    time.sleep(3 + random.randint(0, 60))
+    time.sleep(300 + random.randint(0, 60))
