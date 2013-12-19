@@ -11,8 +11,7 @@ dictionary_req = 1000 # num words in dictionary before trying to respond
 
 print('Building starter markov dictionary')
 markov = markovgen.Markov()
-file_ = open('corpus/empty.txt')
-markov.add_from_file(file_)
+markov.add_from_file('corpus/mind.txt')
 print('Good to go')
 
 print('Logging in to Reddit')

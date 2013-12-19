@@ -12,8 +12,8 @@ class Markov(object):
     self.word_size += len(string.split())
     self.database() # recalculate cache lolol
 
-  def add_from_file(self, open_file):
-    self.open_file = open_file
+  def add_from_file(self, filename):
+    self.open_file = open(filename)
     self.words += self.file_to_words()
     self.word_size = len(self.words)
     self.database()
