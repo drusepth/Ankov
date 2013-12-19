@@ -1,6 +1,8 @@
 import praw
 import time
 import random
+import signal
+import sys
 
 import markovgen
 import settings
@@ -11,7 +13,7 @@ dictionary_req = 1000 # num words in dictionary before trying to respond
 
 print('Building starter markov dictionary')
 markov = markovgen.Markov()
-markov.add_from_file('corpus/mind.txt')
+markov.load()
 print('Good to go')
 
 print('Logging in to Reddit')
@@ -20,6 +22,14 @@ r.login(settings.username(), settings.password())
 print('logged in')
 
 replied_to = []
+
+# Register SIGINT handler for saving on interrupt
+def signal_handler(signal, frame):
+  print('Saving markov dictionary and exiting...')
+  markov.save()
+  sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
 
 while True:
   print('Searching for comments to reply to')
