@@ -5,9 +5,11 @@ import random
 import signal
 import sys
 import re
-import settings
+import os
 
-sys.path.insert(0, '../') #lol
+import settings
+#sys.path.insert(0, '../') #lol
+
 import markovgen
 
 response_rate = 0.001 # %
@@ -61,6 +63,7 @@ def start():
           print('Rate limited')
           time.sleep(150 + random.randint(0, 150))
           pass
+
         except praw.errors.APIException:
           print('API Exception')
           time.sleep(120 + random.randint(0, 90))
@@ -72,5 +75,6 @@ def start():
 
     print('Done looking through comments, saving dictionary')
     markov.save()
+
     print('And sleeping until later')
-    time.sleep(300 + random.randint(0, 60))
+    time.sleep(3 + random.randint(0, 60))
