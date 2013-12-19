@@ -48,7 +48,7 @@ def start():
 
           # Apply some filters to humanize the text
           response = response.lower()
-          response = re.sub("[\.\:;\(\)\"\*]", "", response, 0, 0)
+          #response = re.sub("[\.\:;\(\)\"\*]", "", response, 0, 0)
 
           if len(response) > 0:
             print('Responding')
