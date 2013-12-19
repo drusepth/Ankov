@@ -3,13 +3,11 @@ import time
 import random
 
 import markovgen
+import settings
 
 response_rate = 0.001
 response_length = 6
 dictionary_req = 1000 # num words in dictionary before trying to respond
-
-username = 'andrey1856'
-password = 'j8H3lLif9J4B8j&s9qQ4#jF'
 
 print('Building starter markov dictionary')
 markov = markovgen.Markov()
@@ -18,8 +16,8 @@ markov.add_from_file(file_)
 print('Good to go')
 
 print('Logging in to Reddit')
-r = praw.Reddit(user_agent='andreymarkov')
-r.login(username, password)
+r = praw.Reddit(user_agent=settings.useragent())
+r.login(settings.username(), settings.password())
 print('logged in')
 
 replied_to = []
@@ -31,7 +29,7 @@ while True:
   for comment in subreddit.get_comments():
     if random.randint(0, response_rate * 10000) / 100 == 0 and \
        comment.id not in replied_to and \
-       str(comment.author) != user_name and \
+       str(comment.author) != settings.username() and \
        markov.word_size > dictionary_req:
 
       try:
