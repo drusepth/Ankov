@@ -21,7 +21,7 @@ def start():
   print('Building starter markov dictionary')
   markov = markovgen.Markov()
   try:
-    markov.load()
+    markov.load("reddit")
   except:
     markov.add_from_string("Hello")
   print('Good to go')
@@ -74,7 +74,7 @@ def start():
         print(markov.word_size)
 
     print('Done looking through comments, saving dictionary')
-    markov.save()
+    markov.save("reddit")
 
     print('And sleeping until later')
-    time.sleep(300 + random.randint(0, 60))
+    time.sleep(300 + random.randint(300, 600))

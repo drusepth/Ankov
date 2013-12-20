@@ -1,5 +1,6 @@
 import random
 import pickle
+import os
  
 class Markov(object):
 
@@ -8,15 +9,17 @@ class Markov(object):
     self.words = []
     self.word_size = 0
 
-  def save(self):
-    with open('pickle/words', 'r+') as serialize:
+  def save(self, bank_name):
+    with open('memory/' + bank_name, 'w+') as serialize:
       pickle.dump(self.words, serialize)
 
-  def load(self):
-    with open('pickle/words') as serialize:
-      self.words = pickle.load(serialize)
-      self.word_size = len(self.words)
-      self.database()
+  def load(self, bank_name):
+    path = 'memory/' + str(bank_name)
+    if os.path.exists(path):
+      with open(path) as serialize:
+        self.words = pickle.load(serialize)
+        self.word_size = len(self.words)
+        self.database()
 
   def add_from_string(self, string):
     self.words += string.split()

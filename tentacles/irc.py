@@ -20,14 +20,14 @@ dictionary_req = 1000     # num words in dictionary before trying to respond
 irc_server = 'irc.amazdong.com'
 irc_port = 6667
 irc_name = 'ankov'
-irc_channel = '#test'
+irc_channel = '#interns'
 
 def start():
   #todo share this across all tentacles
   print('Building starter markov dictionary')
   markov = markovgen.Markov()
   try:
-    markov.load()
+    markov.load("irc")
   except:
     markov.add_from_string("Hello")
   print('Good to go')
@@ -85,4 +85,4 @@ def start():
       else: # Learn from IRC too!
         markov.add_from_string(message)
 
-    markov.save()
+    markov.save("irc")
