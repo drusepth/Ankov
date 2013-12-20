@@ -55,18 +55,18 @@ def start():
             comment.reply(response)
             replied_to.append(comment.id)
             comment.upvote()
-            time.sleep(90 + random.randint(0, 30))
+            time.sleep(300 + random.randint(150, 300))
           else:
             print('Not enough in cache to respond yet')
 
         except praw.errors.RateLimitExceeded:
           print('Rate limited')
-          time.sleep(150 + random.randint(0, 150))
+          time.sleep(150 + random.randint(0, 500))
           pass
 
         except praw.errors.APIException:
           print('API Exception')
-          time.sleep(120 + random.randint(0, 90))
+          time.sleep(150 + random.randint(0, 300))
           pass
 
       else: # not responding to them, so learn from them
