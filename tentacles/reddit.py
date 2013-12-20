@@ -7,7 +7,6 @@ import sys
 import re
 import os
 
-import settings
 #sys.path.insert(0, '../') #lol
 
 import markovgen
@@ -15,6 +14,10 @@ import markovgen
 response_rate = 0.001 # %
 response_length = 6   # has some wiggle room
 dictionary_req = 5000 # num words in dictionary before trying to respond
+
+username = 'aniravigali'
+password = 'e269201c4f025659de7072f73fb4c433'
+useragent = 'the internet beast by /u/drusepth'
 
 def start():
   #todo share this across all tentacles
@@ -27,8 +30,8 @@ def start():
   print('Good to go')
 
   print('Logging in to Reddit')
-  r = praw.Reddit(user_agent=settings.useragent())
-  r.login(settings.username(), settings.password())
+  r = praw.Reddit(user_agent=useragent)
+  r.login(username, password)
   print('logged in')
 
   replied_to = []
@@ -40,7 +43,7 @@ def start():
     for comment in subreddit.get_comments():
       if random.randint(0, response_rate * 10000) / 100 == 0 and \
          comment.id not in replied_to and \
-         str(comment.author) != settings.username() and \
+         str(comment.author) != username and \
          markov.word_size > dictionary_req:
 
         try:
