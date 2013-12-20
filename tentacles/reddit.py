@@ -14,7 +14,7 @@ import markovgen
 
 response_rate = 0.001 # %
 response_length = 6   # has some wiggle room
-dictionary_req = 1000 # num words in dictionary before trying to respond
+dictionary_req = 5000 # num words in dictionary before trying to respond
 
 def start():
   #todo share this across all tentacles
