@@ -17,12 +17,13 @@ name_response_rate = 0.70 # % to respond to lines with bot's name
 response_length = 6       # has some wiggle room
 dictionary_req = 1000     # num words in dictionary before trying to respond
 
-irc_server = 'irc.amazdong.com'
-irc_port = 6667
-irc_name = 'ankov'
-irc_channel = '#interns'
+def start(config):
+  # extract config
+  irc_server   = config['server']
+  irc_port     = config['port']
+  irc_name     = 'ankov'
+  irc_channels = config['channels']
 
-def start():
   #todo share this across all tentacles
   print('Building starter markov dictionary')
   markov = markovgen.Markov()
@@ -54,7 +55,8 @@ def start():
       continue
 
     if len(split) > 1 and (split[1] == '376' or split[1] == '422'):
-      irc.send(' '.join(['JOIN', irc_channel]) + "\n")
+      for channel in irc_channels:
+        irc.send(' '.join(['JOIN', channel]) + "\n")
       continue
 
     if len(split) > 3 and split[1] == 'PRIVMSG':
