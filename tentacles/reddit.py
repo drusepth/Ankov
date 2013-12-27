@@ -7,13 +7,11 @@ import sys
 import re
 import os
 
-#sys.path.insert(0, '../') #lol
-
-import markovgen
+import speech
 
 response_rate = 0.001 # %
 response_length = 6   # has some wiggle room
-dictionary_req = 5000 # num words in dictionary before trying to respond
+dictionary_req = 2000 # num words in dictionary before trying to respond
 
 username = 'aniravigali'
 password = 'e269201c4f025659de7072f73fb4c433'
@@ -22,7 +20,7 @@ useragent = 'the internet beast by /u/drusepth'
 def start():
   #todo share this across all tentacles
   print('Building starter markov dictionary')
-  markov = markovgen.Markov()
+  markov = speech.Markov()
   try:
     markov.load("reddit")
   except:
@@ -44,7 +42,7 @@ def start():
       if random.randint(0, response_rate * 10000) / 100 == 0 and \
          comment.id not in replied_to and \
          str(comment.author) != username and \
-         markov.word_size > dictionary_req:
+         markov.word_size() > dictionary_req:
 
         try:
           response = markov.generate_markov_text(response_length + random.randint(-5, 5))
@@ -74,7 +72,7 @@ def start():
 
       else: # not responding to them, so learn from them
         markov.add_from_string(comment.body)
-        print(markov.word_size)
+        print(markov.word_size())
 
     print('Done looking through comments, saving dictionary')
     markov.save("reddit")

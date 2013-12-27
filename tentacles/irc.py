@@ -8,83 +8,77 @@ import re
 import os
 import socket
 
-#sys.path.insert(0, '../') #lol
+import speech
+import tentacle_base
 
-import markovgen
+#class IRC_Tentacle(Tentacle):
+class IRC_Tentacle():
+  def __init__(self, config):
+    self.irc_server   = config['server']
+    self.irc_port     = config['port']
+    self.irc_name     = 'ankov'
+    self.irc_channels = config['channels']
 
-response_rate = 0.001     # % to respond to any line
-name_response_rate = 0.70 # % to respond to lines with bot's name
-response_length = 6       # has some wiggle room
-dictionary_req = 1000     # num words in dictionary before trying to respond
+    self.response_rate = 0.001     # % to respond to any line
+    self.name_response_rate = 0.70 # % to respond to lines with bot's name
+    self.response_length = 6       # has some wiggle room
+    self.dictionary_req = 1000     # num words in dictionary before trying to respond
 
-def start(config):
-  # extract config
-  irc_server   = config['server']
-  irc_port     = config['port']
-  irc_name     = 'ankov'
-  irc_channels = config['channels']
+    self.markov = speech.Markov()
+    try:
+      self.markov.load("irc")
+    except:
+      self.markov.add_from_string("Hello")
 
-  #todo share this across all tentacles
-  print('Building starter markov dictionary')
-  markov = markovgen.Markov()
-  try:
-    markov.load("irc")
-  except:
-    markov.add_from_string("Hello")
-  print('Good to go')
+    self.replied_to = []
 
-  print('Logging in to IRC')
-  irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  irc.connect( (irc_server, irc_port) )
-  irc.send(' '.join(['USER', irc_name, irc_name, irc_name, ':Ankov']) + "\n")
-  irc.send(' '.join(['NICK', irc_name]) + "\n")
-  con = irc.makefile('r', 0)
-  print('logged in')
 
-  replied_to = []
+  def start(self):
+    irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    irc.connect( (self.irc_server, self.irc_port) )
+    irc.send(' '.join(['USER', self.irc_name, self.irc_name, self.irc_name, ':Ankov']) + "\n")
+    irc.send(' '.join(['NICK', self.irc_name]) + "\n")
+    con = irc.makefile('r', 0)
 
-  print('Starting IRC loop')
-  while True:
-    line = con.readline()
-    split = line.split(' ')
-    #print(line)
-    #print(split)
+    while True:
+      line = con.readline()
+      split = line.split(' ')
 
-    if len(split) > 1 and split[0] == 'PING':
-      irc.send(' '.join(['PONG', split[1]]) + "\r\n")
-      continue
+      if len(split) > 1 and split[0] == 'PING':
+        irc.send(' '.join(['PONG', split[1]]) + "\r\n")
+        continue
 
-    if len(split) > 1 and (split[1] == '376' or split[1] == '422'):
-      for channel in irc_channels:
-        irc.send(' '.join(['JOIN', channel]) + "\n")
-      continue
+      if len(split) > 1 and (split[1] == '376' or split[1] == '422'):
+        for channel in self.irc_channels:
+          irc.send(' '.join(['JOIN', channel]) + "\n")
+        continue
 
-    if len(split) > 3 and split[1] == 'PRIVMSG':
-      user    = split[0][1:] # dru!dru@host
-      user    = user[0:user.find('!')] # dru
-      channel = split[2]
-      message = ' '.join(split[3:])[1:].rstrip()
-      print('<' + user + '> ' + message)
+      if len(split) > 3 and split[1] == 'PRIVMSG':
+        user    = split[0][1:] # dru!dru@host
+        user    = user[0:user.find('!')] # dru
+        channel = split[2]
+        message = ' '.join(split[3:])[1:].rstrip()
+        print('<' + user + '> ' + message)
 
-      if (random() < response_rate or \
-         (random() < name_response_rate and \
-          message.find(irc_name) > -1)) and \
-         channel.find('#') > -1 and \
-         markov.word_size > dictionary_req:
+        if (random() < self.response_rate or \
+           (random() < self.name_response_rate and \
+            message.find(self.irc_name) > -1)) and \
+           channel.find('#') > -1 and \
+           self.markov.word_size() > self.dictionary_req:
 
-        try:
-          response = markov.generate_markov_text(response_length + int(random() * 11) - 5)
+          try:
+            response = self.markov.generate_markov_text(self.response_length + int(random() * 11) - 5)
 
-          # Apply filters
-          response = response.lower()
+            # Apply filters
+            response = response.lower()
           
-          if len(response) > 0:
-            print('Responding')
-            irc.send(' '.join(['PRIVMSG', channel, ':' + response]) + "\r\n")
-        except KeyError:
-          print('Caught some exception, go investigate')
+            if len(response) > 0:
+              irc.send(' '.join(['PRIVMSG', channel, ':' + response]) + "\r\n")
 
-      else: # Learn from IRC too!
-        markov.add_from_string(message)
+          except KeyError:
+            print('Caught some exception, go investigate')
 
-    markov.save("irc")
+        else: # Learn from IRC too!
+          self.markov.add_from_string(message)
+
+      self.markov.save("irc")
