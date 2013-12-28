@@ -8,9 +8,9 @@ import re
 import os
 
 import speech
-import tentacle_base
+from tentacle_base import Tentacle
 
-class Reddit_Tentacle(tentacle_base.Tentacle):
+class Reddit_Tentacle(Tentacle):
   def __init__(self, config):
     self.response_rate = 0.001 # %
     self.response_length = 6   # has some wiggle room
@@ -21,24 +21,26 @@ class Reddit_Tentacle(tentacle_base.Tentacle):
     self.username = config['username']
     self.password = config['password']
 
+    self.identifier = self.username
+
   def start(self):
-    print('Building starter markov dictionary')
+    Tentacle.report(self, 'Building starter markov dictionary')
     markov = speech.Markov()
     try:
       markov.load("reddit")
     except:
       markov.add_from_string("Hello")
-    print('Good to go')
+    Tentacle.report(self, 'Good to go')
 
-    print('Logging in to Reddit')
+    Tentacle.report(self, 'Logging in to Reddit')
     r = praw.Reddit(user_agent=self.useragent)
     r.login(self.username, self.password)
-    print('logged in')
+    Tentacle.report(self, 'logged in')
 
     replied_to = []
 
     while True:
-      print('Searching for comments to reply to')
+      Tentacle.report(self, 'Searching for comments to reply to')
       subreddit = r.get_subreddit('all')
 
       for comment in subreddit.get_comments():
@@ -55,30 +57,30 @@ class Reddit_Tentacle(tentacle_base.Tentacle):
             #response = re.sub("[\.\:;\(\)\"\*]", "", response, 0, 0)
 
             if len(response) > 0:
-              print('Responding')
+              Tentacle.report(self, 'Responding')
               comment.reply(response)
               replied_to.append(comment.id)
               comment.upvote()
               time.sleep(300 + random.randint(150, 300))
             else:
-              print('Not enough in cache to respond yet')
+              Tentacle.report(self, 'Not enough in cache to respond yet')
 
           except praw.errors.RateLimitExceeded:
-            print('Rate limited')
+            Tentacle.report(self, 'Rate limited')
             time.sleep(150 + random.randint(0, 500))
             pass
 
           except praw.errors.APIException:
-            print('API Exception')
+            Tentacle.report(self, 'API Exception')
             time.sleep(150 + random.randint(0, 300))
             pass
 
         else: # not responding to them, so learn from them
           markov.add_from_string(comment.body)
-          print(markov.word_size())
+          Tentacle.report(self, markov.word_size())
 
-      print('Done looking through comments, saving dictionary')
-      markov.save("reddit")
+      Tentacle.report(self, 'Done looking through comments, saving dictionary')
+      markov.save('reddit')
 
-      print('And sleeping until later')
+      Tentacle.report(self, 'And sleeping until later')
       time.sleep(300 + random.randint(300, 600))

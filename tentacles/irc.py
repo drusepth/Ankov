@@ -8,15 +8,17 @@ import os
 import socket
 
 import speech
-import tentacle_base
+from tentacle_base import Tentacle
 
 #class IRC_Tentacle():
-class IRC_Tentacle(tentacle_base.Tentacle):
+class IRC_Tentacle(Tentacle):
   def __init__(self, config):
     self.irc_server   = config['server']
     self.irc_port     = config['port']
     self.irc_name     = 'ankov'
     self.irc_channels = config['channels']
+
+    self.identifier = str(self.irc_name) + '@' + str(self.irc_server)
 
     self.response_rate = 0.001     # % to respond to any line
     self.name_response_rate = 0.70 # % to respond to lines with bot's name
@@ -33,11 +35,13 @@ class IRC_Tentacle(tentacle_base.Tentacle):
 
 
   def start(self):
+    Tentacle.report(self, 'Connecting to ' + str(self.irc_server))
     irc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     irc.connect( (self.irc_server, self.irc_port) )
     irc.send(' '.join(['USER', self.irc_name, self.irc_name, self.irc_name, ':Ankov']) + "\n")
     irc.send(' '.join(['NICK', self.irc_name]) + "\n")
     con = irc.makefile('r', 0)
+    Tentacle.report(self, 'Connected')
 
     while True:
       line = con.readline()
@@ -61,7 +65,7 @@ class IRC_Tentacle(tentacle_base.Tentacle):
         user    = user[0:user.find('!')] # dru
         channel = split[2]
         message = ' '.join(split[3:])[1:].rstrip()
-        print('<' + user + '> ' + message)
+        #print('<' + user + '> ' + message)
 
         if (random() < self.response_rate or \
            (random() < self.name_response_rate and \
@@ -74,12 +78,13 @@ class IRC_Tentacle(tentacle_base.Tentacle):
 
             # Apply filters
             response = response.lower()
-          
+
+            Tentacle.report(self, 'Responding in ' + str(channel))
             if len(response) > 0:
               irc.send(' '.join(['PRIVMSG', channel, ':' + response]) + "\r\n")
 
           except KeyError:
-            print('Caught some exception, go investigate')
+            Tentacle.report(self, 'Caught some exception, go investigate')
 
         else: # Learn from IRC too!
           self.markov.add_from_string(message)
