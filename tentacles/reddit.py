@@ -8,74 +8,77 @@ import re
 import os
 
 import speech
+import tentacle_base
 
-response_rate = 0.001 # %
-response_length = 6   # has some wiggle room
-dictionary_req = 2000 # num words in dictionary before trying to respond
+class Reddit_Tentacle(tentacle_base.Tentacle):
+  def __init__(self, config):
+    self.response_rate = 0.001 # %
+    self.response_length = 6   # has some wiggle room
+    self.dictionary_req = 2000 # num words in dictionary before trying to respond
 
-username = 'aniravigali'
-password = 'e269201c4f025659de7072f73fb4c433'
-useragent = 'the internet beast by /u/drusepth'
+    self.useragent = 'the internet beast by /u/drusepth'
 
-def start():
-  #todo share this across all tentacles
-  print('Building starter markov dictionary')
-  markov = speech.Markov()
-  try:
-    markov.load("reddit")
-  except:
-    markov.add_from_string("Hello")
-  print('Good to go')
+    self.username = config['username']
+    self.password = config['password']
 
-  print('Logging in to Reddit')
-  r = praw.Reddit(user_agent=useragent)
-  r.login(username, password)
-  print('logged in')
+  def start(self):
+    print('Building starter markov dictionary')
+    markov = speech.Markov()
+    try:
+      markov.load("reddit")
+    except:
+      markov.add_from_string("Hello")
+    print('Good to go')
 
-  replied_to = []
+    print('Logging in to Reddit')
+    r = praw.Reddit(user_agent=self.useragent)
+    r.login(self.username, self.password)
+    print('logged in')
 
-  while True:
-    print('Searching for comments to reply to')
-    subreddit = r.get_subreddit('all')
+    replied_to = []
 
-    for comment in subreddit.get_comments():
-      if random.randint(0, response_rate * 10000) / 100 == 0 and \
-         comment.id not in replied_to and \
-         str(comment.author) != username and \
-         markov.word_size() > dictionary_req:
+    while True:
+      print('Searching for comments to reply to')
+      subreddit = r.get_subreddit('all')
 
-        try:
-          response = markov.generate_markov_text(response_length + random.randint(-5, 5))
+      for comment in subreddit.get_comments():
+        if random.randint(0, self.response_rate * 10000) / 100 == 0 and \
+           comment.id not in replied_to and \
+           str(comment.author) != self.username and \
+           markov.word_size() > self.dictionary_req:
 
-          # Apply some filters to humanize the text
-          response = response.lower()
-          #response = re.sub("[\.\:;\(\)\"\*]", "", response, 0, 0)
+          try:
+            response = markov.generate_markov_text(self.response_length + random.randint(-5, 5))
 
-          if len(response) > 0:
-            print('Responding')
-            comment.reply(response)
-            replied_to.append(comment.id)
-            comment.upvote()
-            time.sleep(300 + random.randint(150, 300))
-          else:
-            print('Not enough in cache to respond yet')
+            # Apply some filters to humanize the text
+            response = response.lower()
+            #response = re.sub("[\.\:;\(\)\"\*]", "", response, 0, 0)
 
-        except praw.errors.RateLimitExceeded:
-          print('Rate limited')
-          time.sleep(150 + random.randint(0, 500))
-          pass
+            if len(response) > 0:
+              print('Responding')
+              comment.reply(response)
+              replied_to.append(comment.id)
+              comment.upvote()
+              time.sleep(300 + random.randint(150, 300))
+            else:
+              print('Not enough in cache to respond yet')
 
-        except praw.errors.APIException:
-          print('API Exception')
-          time.sleep(150 + random.randint(0, 300))
-          pass
+          except praw.errors.RateLimitExceeded:
+            print('Rate limited')
+            time.sleep(150 + random.randint(0, 500))
+            pass
 
-      else: # not responding to them, so learn from them
-        markov.add_from_string(comment.body)
-        print(markov.word_size())
+          except praw.errors.APIException:
+            print('API Exception')
+            time.sleep(150 + random.randint(0, 300))
+            pass
 
-    print('Done looking through comments, saving dictionary')
-    markov.save("reddit")
+        else: # not responding to them, so learn from them
+          markov.add_from_string(comment.body)
+          print(markov.word_size())
 
-    print('And sleeping until later')
-    time.sleep(300 + random.randint(300, 600))
+      print('Done looking through comments, saving dictionary')
+      markov.save("reddit")
+
+      print('And sleeping until later')
+      time.sleep(300 + random.randint(300, 600))

@@ -1,5 +1,4 @@
 # feels so java in here
-import praw
 import time
 from random import random
 import signal
@@ -11,8 +10,8 @@ import socket
 import speech
 import tentacle_base
 
-#class IRC_Tentacle(Tentacle):
-class IRC_Tentacle():
+#class IRC_Tentacle():
+class IRC_Tentacle(tentacle_base.Tentacle):
   def __init__(self, config):
     self.irc_server   = config['server']
     self.irc_port     = config['port']
@@ -42,6 +41,10 @@ class IRC_Tentacle():
 
     while True:
       line = con.readline()
+
+      if len(line) == 0:
+        continue
+
       split = line.split(' ')
 
       if len(split) > 1 and split[0] == 'PING':
