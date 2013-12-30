@@ -242,6 +242,12 @@ class Markov(object):
     print(sentences)
     string = '. '.join(sentences)
 
+    # And at the risk of copypasting code, also capitalize after question marks
+    sentences = string.split('?')
+    sentences = map((lambda letter: letter.strip().capitalize()), sentences)
+    print(sentences)
+    string = '? '.join(sentences)
+
     # Capitalize all lonely instances of i
     string = string.replace(" i ", " I ")
 
