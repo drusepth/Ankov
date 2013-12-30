@@ -88,6 +88,7 @@ class IRC_Tentacle(Tentacle):
           self.markov.add_from_string(message)
 
       try:
-        self.markov.save("irc")
+        if random() < 0.1:
+          self.markov.save("irc")
       except:
         Tentacle.report(self, 'Could not save markov database, will try again later')
