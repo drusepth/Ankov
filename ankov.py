@@ -22,6 +22,13 @@ irc_vectors = [
       '#c#', '#archlinux', '#bitcoin', '#debian', '#haskell', '#gentoo', '#node.js'
     ]
   },
+  {
+    'server': 'irc.tddirc.net',
+    'port':   6667,
+    'channels': [
+      '#thunked', '#hackerthreads'
+    ]
+  }
 ]
 
 reddit_vectors = [
