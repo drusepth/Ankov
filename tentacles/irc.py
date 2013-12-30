@@ -43,8 +43,9 @@ class IRC_Tentacle(Tentacle):
     con = irc.makefile('r', 0)
     Tentacle.report(self, 'Connected')
 
-    while True:
-      line = con.readline()
+    #while True:
+    for line in con:
+      #line = con.readline()
 
       if len(line) == 0:
         continue
@@ -86,4 +87,7 @@ class IRC_Tentacle(Tentacle):
         else: # Learn from IRC too!
           self.markov.add_from_string(message)
 
-      self.markov.save("irc")
+      try:
+        self.markov.save("irc")
+      except:
+        Tentacle.report(self, 'Could not save markov database, will try again later')
