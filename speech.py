@@ -248,6 +248,12 @@ class Markov(object):
     print(sentences)
     string = '? '.join(sentences)
 
+    # ...and exclamation points
+    sentences = string.split('!')
+    sentences = map((lambda letter: letter.strip().capitalize()), sentences)
+    print(sentences)
+    string = '! '.join(sentences)
+
     # Capitalize all lonely instances of i
     string = string.replace(" i ", " I ")
 
