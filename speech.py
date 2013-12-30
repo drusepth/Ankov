@@ -112,7 +112,7 @@ class Markov(object):
     # Begin building the string to the left, until we hit a <<START>> token.
     # To avoid continuously prepending to an array, we're going to append to
     # one and then reverse it all at once afterwards.
-    while current_word != None and current_word in self.graph.keys():
+    while current_word != None and current_word in self.graph.keys() and len(text) <= size:
       # Fetch a list of all parents
       if len(self.graph[current_word].parents) > 1:
         # Disallow None parents if there are any other potential parents
@@ -145,7 +145,7 @@ class Markov(object):
     current_word = starter
     print("starting back at mid: " + current_word)
     #while len(self.graph[current_word].children) > 0:
-    while current_word != '<<END>>':
+    while current_word != '<<END>>' and len(text) <= size:
       # If this child doesn't have any children (possible with large ngram sizes),
       # attempt to rectify the situation by pulling in previous words
       max_depth = self.ngram
