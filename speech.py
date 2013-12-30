@@ -26,7 +26,7 @@ class Markov(object):
   def __init__(self):
     self.graph = {}
     self.graph['<<START>>'] = Node('<<START>>', None)
-    self.ngram = 5 # size of ngrams
+    self.ngram = 4 # size of ngrams
 
   # Serialize self into memory/bank_name
   def save(self, bank_name):
@@ -67,7 +67,7 @@ class Markov(object):
       # Because ngram size can be >1, go ahead and reverse-index the antecedent
       # to point to the previous word, too
       if index != 0:
-        print("adding " + words[index - 1] + " <-- " + antecedent)
+        #print("adding " + words[index - 1] + " <-- " + antecedent)
         self.graph[antecedent].add_parent(words[index - 1])
 
       # If the consequent already exists in the graph, give it an additional parent
@@ -107,7 +107,7 @@ class Markov(object):
 
     text = [current_word]
 
-    print("staring with " + current_word)
+    #print("staring with " + current_word)
 
     # Begin building the string to the left, until we hit a <<START>> token.
     # To avoid continuously prepending to an array, we're going to append to
@@ -120,8 +120,8 @@ class Markov(object):
       else:
         parents = self.graph[current_word].parents
 
-      print("parents:")
-      print(parents)
+      #print("parents:")
+      #print(parents)
 
       # Choose one at random, and step to it. Because everything except our
       # start token should have a parent, we're going to forgo a check here
@@ -131,19 +131,19 @@ class Markov(object):
         text.append(parent)
       current_word = parent
 
-      print("chose:")
-      print(parent)
+      #print("chose:")
+      #print(parent)
 
     # After we finally reach a start token, go ahead and reverse the array
     # to put the words in the correct order, before moving on to the second
     # half of the sentence to generate.
     text.reverse()
 
-    print("message progress at mid: ")
-    print(text)
+    #print("message progress at mid: ")
+    #print(text)
 
     current_word = starter
-    print("starting back at mid: " + current_word)
+    #print("starting back at mid: " + current_word)
     #while len(self.graph[current_word].children) > 0:
     while current_word != '<<END>>' and len(text) <= size:
       # If this child doesn't have any children (possible with large ngram sizes),
@@ -159,8 +159,8 @@ class Markov(object):
         # Because nodes in text can consist of multiple words (when ngram size > 1)
         # rejoin and resplit on each expansion iteration.
         text = ' '.join(text).split()
-        print("text is ")
-        print(text)
+        #print("text is ")
+        #print(text)
 
         # If there are no more words to expand, don't try to absorb more
         if len(current_word.split()) >= len(text):
@@ -171,7 +171,7 @@ class Markov(object):
         
         if current_word in self.graph.keys():
           children = self.graph[current_word].children
-          print("expanding current_word to " + current_word)
+          #print("expanding current_word to " + current_word)
 
           # If adding the word prefix now introduces children, break out early
           if len(self.graph[current_word].children) > 0:
@@ -186,18 +186,18 @@ class Markov(object):
 
       # Choose one randomly and step in
       child = children[random.randint(0, len(children) - 1)]
-      print("chose child: " + child)
+      #print("chose child: " + child)
 
       # Because a child might have been expanded, only take the last word of it to append
       text.append(child.split()[-1])
       current_word = child
 
-    print('generated')
-    print(text)
+    #print('generated')
+    #print(text)
 
     # Before joining text fragments, we want to filter out our tokens
     tokens = ['<<START>>', '<<END>>']
     text = ' '.join([x for x in text if x is not None]).split()
-    print(text)
-    print('rem')
+    #print(text)
+    #print('rem')
     return ' '.join([x for x in text if x not in tokens]) # todo combine these two lines?
