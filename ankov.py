@@ -6,14 +6,14 @@ from tentacles.reddit import Reddit_Tentacle
 tentacles = []
 
 irc_vectors = [
-  #{
-  #  'server': 'irc.amazdong.com',
-  #  'port':   6667,
-  #  'channels': [
-  #    '#ankov',
-  #    '#interns'
-  #  ]
-  #},
+  {
+    'server': 'irc.amazdong.com',
+    'port':   6667,
+    'channels': [
+      '#ankov',
+      '#interns'
+    ]
+  },
   {
     'server': 'irc.freenode.net',
     'port':   6667,
