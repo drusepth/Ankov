@@ -6,11 +6,20 @@ from tentacles.reddit import Reddit_Tentacle
 tentacles = []
 
 irc_vectors = [
+  #{
+  #  'server': 'irc.amazdong.com',
+  #  'port':   6667,
+  #  'channels': [
+  #    '#ankov',
+  #    '#interns'
+  #  ]
+  #},
   {
-    'server': 'irc.amazdong.com',
+    'server': 'irc.freenode.net',
     'port':   6667,
     'channels': [
-      '#ankov'
+      '#c', '##linux', '##overflow', '#freenode', '#perl', '#python', '#ruby', '#ubuntu',
+      '#c#', '#archlinux', '#bitcoin', '#debian', '#haskell', '#gentoo', '#node.js'
     ]
   },
 ]
@@ -19,6 +28,10 @@ reddit_vectors = [
   {
     'username': 'aniravigali',
     'password': 'e269201c4f025659de7072f73fb4c433'
+  },
+  {
+    'username': 'oprahversiontwo',
+    'password': 'a1cb02bf6d240de3338e72b5f0d3f268'
   },
   {
     'username': 'japlandian',
