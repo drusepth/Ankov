@@ -10,7 +10,7 @@ class Node:
     self.parents  = [parent]
     self.children = []
     self.value    = value
-    self.weight   = 1 # todo implement frequency weight
+    self.weight   = 1 # todo implement frequency weights
 
   def add_child(self, child):
     if child not in self.children:
@@ -25,7 +25,8 @@ class Markov(object):
   # Initialize the markov generator object
   def __init__(self):
     self.graph = {}
-    self.graph["<<START>>"] = Node("<<START>>", None)
+    self.graph['<<START>>'] = Node('<<START>>', None)
+    self.ngram = 3 # size of ngrams
 
   # Serialize self into memory/bank_name
   def save(self, bank_name):
@@ -41,26 +42,46 @@ class Markov(object):
 
   # Break string down into ngrams and add them to the graph
   def add_from_string(self, string):
-    previous_word = "<<START>>"
-    for word in string.split():
-      if word in self.graph.keys():
-        # If this word already exists in the graph, give it an additional parent
-        self.graph[word].add_parent(previous_word)          
+    words = string.split()
+    words.insert(0, "<<START>>")
+    words.append("<<END>>")
+
+    if len(words) < self.ngram:
+      return
+
+    for index in range(0, len(words) - self.ngram + 1):
+      # Build ngram antecedents for variable ngram size
+      antecedents = []
+      for i in range(0, self.ngram - 1):
+        antecedents.append(words[index + i])
+
+      antecedent = ' '.join(antecedents)
+      consequent = words[index + self.ngram - 1]
+
+      print(antecedent + " --> " + consequent)
+
+      # If the antecedent ("There is...") is not in the graph yet, quickly add it
+      if antecedent not in self.graph.keys():
+        self.graph[antecedent] = Node(antecedent, None)
+
+      # Because ngram size can be >1, go ahead and reverse-index the antecedent
+      # to point to the previous word, too
+      if index != 0:
+        print("adding " + words[index - 1] + " <-- " + antecedent)
+        self.graph[antecedent].add_parent(words[index - 1])
+
+      # If the consequent already exists in the graph, give it an additional parent
+      if consequent in self.graph.keys():
+        self.graph[consequent].add_parent(antecedent)
 
         # (And give its parent an additional child)
-        self.graph[previous_word].add_child(word)
+        self.graph[antecedent].add_child(consequent)
 
       else:
-        # If this word does not already exist in the graph, add it to the graph
+        # If the consequent does not already exist in the graph, add it to the graph
         # and assign it as a child to its parent.
-        self.graph[word] = Node(word, previous_word)
-        self.graph[previous_word].add_child(word)
-
-      # After adding children and parents, update the previous_word
-      previous_word = word
-
-    # After looping through all the words, link the last word to <<END>>
-    self.graph[previous_word].add_child("<<END>>")
+        self.graph[consequent] = Node(consequent, antecedent)
+        self.graph[antecedent].add_child(consequent)
 
   # Open a file and feed it into the graph
   def add_from_file(self, filename):
@@ -77,41 +98,98 @@ class Markov(object):
   # Generate markov chain
   def generate_markov_text(self, size=25, starter="<<START>>"):
     current_word = starter
+
+    # If the starter word isn't known, pick a random one instead
+    if current_word.split()[0] not in self.graph.keys():
+      keys = self.graph.keys()
+      current_word = keys[random.randint(0, len(keys) - 1)]
+      starter = current_word
+
     text = [current_word]
+
+    print("staring with " + current_word)
 
     # Begin building the string to the left, until we hit a <<START>> token.
     # To avoid continuously prepending to an array, we're going to append to
     # one and then reverse it all at once afterwards.
-    while current_word != "<<START>>":
-      # Fetch a list of all parents 
-      parents = self.graph[current_word].parents
+    while current_word != None and current_word in self.graph.keys():
+      # Fetch a list of all parents
+      if len(self.graph[current_word].parents) > 1:
+        # Disallow None parents if there are any other potential parents
+        parents = [x for x in self.graph[current_word].parents if x is not None]
+      else:
+        parents = self.graph[current_word].parents
+
+      print("parents:")
+      print(parents)
 
       # Choose one at random, and step to it. Because everything except our
       # start token should have a parent, we're going to forgo a check here
       # and assume len(parents) > 0.
       parent = parents[random.randint(0, len(parents) - 1)]
-      text.append(parent)
+      if parent != None:
+        text.append(parent)
       current_word = parent
+
+      print("chose:")
+      print(parent)
 
     # After we finally reach a start token, go ahead and reverse the array
     # to put the words in the correct order, before moving on to the second
     # half of the sentence to generate.
     text.reverse()
 
+    print("message progress at mid: ")
+    print(text)
+
     current_word = starter
-    while current_word != "<<END>>":
-      # Fetch a list of all children
+    print("starting back at mid: " + current_word)
+    #while len(self.graph[current_word].children) > 0:
+    while current_word != '<<END>>':
+      # If this child doesn't have any children (possible with large ngram sizes),
+      # attempt to rectify the situation by pulling in previous words
+      max_depth = self.ngram
+      while len(self.graph[current_word].children) == 0 and max_depth > 0:
+        max_depth -= 1
+
+        # Because nodes in text can consist of multiple words (when ngram size > 1)
+        # rejoin and resplit on each expansion iteration.
+        text = ' '.join(text).split()
+        print("text is ")
+        print(text)
+
+        # If there are no more words to expand, don't try to absorb more
+        if len(current_word.split()) >= len(text):
+          print('not enough words to absorb')
+          break
+
+        current_word = ' '.join([text[-2], current_word])
+        children = self.graph[current_word].children
+        
+        if current_word in self.graph.keys():
+          print("expanding current_word to " + current_word)
+
+        # If adding the word prefix now introduces children, break out early
+        if len(self.graph[current_word].children) > 0:
+          break
+
+      # Fetch a list of all possible children
       children = self.graph[current_word].children
 
-      # Choose a child at random, step to it.
+      # Choose one randomly and step in
       child = children[random.randint(0, len(children) - 1)]
-      text.append(child)
+      print("chose child: " + child)
+
+      # Because a child might have been expanded, only take the last word of it to append
+      text.append(child.split()[-1])
       current_word = child
 
-    # Sentence should now span from <<START>> to <<END>>, with actual stuff
-    # inside. Strip out the first and last node (tokens), and return the
-    # generated sentence.
-    text.pop(0)  # <<START>>
-    text.pop(-1) # <<END>>
+    print('generated')
+    print(text)
 
-    return ' '.join(text)
+    # Before joining text fragments, we want to filter out our tokens
+    tokens = ['<<START>>', '<<END>>']
+    text = ' '.join([x for x in text if x is not None]).split()
+    print(text)
+    print('rem')
+    return ' '.join([x for x in text if x not in tokens]) # todo combine these two lines?
