@@ -96,11 +96,11 @@ class Markov(object):
     return len(self.graph)
 
   # Generate markov chain
-  def generate_markov_text(self, size=25, starter="<<START>>"):
+  def generate_markov_text(self, size=25, starter=None):
     current_word = starter
 
     # If the starter word isn't known, pick a random one instead
-    if current_word.split()[0] not in self.graph.keys():
+    if starter is None or current_word.split()[0] not in self.graph.keys():
       keys = self.graph.keys()
       current_word = keys[random.randint(0, len(keys) - 1)]
       starter = current_word
@@ -172,6 +172,10 @@ class Markov(object):
         # If adding the word prefix now introduces children, break out early
         if len(self.graph[current_word].children) > 0:
           break
+
+      # If it's impossible to move forward in the sentence from here, break early
+      if current_word not in self.graph.keys() or len(self.graph[current_word].children) == 0:
+        break
 
       # Fetch a list of all possible children
       children = self.graph[current_word].children
