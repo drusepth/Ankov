@@ -2,6 +2,8 @@ import random
 import pickle
 import os
 
+from itertools import chain
+
 # For this graph, you can assume "parents" are all words that come prior
 # to a node's value in a sentence, and "children" are all words that can
 # come afterwards.
@@ -30,7 +32,20 @@ class Markov(object):
 
   # Serialize self into memory/bank_name
   def save(self, bank_name):
-    with open('memory/' + bank_name, 'w+') as serialize:
+    path = 'memory/' + str(bank_name)
+    existing_graph = {}
+
+    # Load the on-disk graph into our live one to prevent clobbering changes
+    if os.path.exists(path):
+      with open(path) as deserialize:
+        existing_graph = pickle.load(deserialize)
+
+    # Merge the two graphs together into a new one
+    # todo merge children/parents rather than just key->value
+    self.graph = dict(chain(existing_graph.items(), self.graph.items()))
+
+    # Save the combined graph to disk
+    with open(path, 'w+') as serialize:
       pickle.dump(self.graph, serialize)
 
   # Deserialize memory/bank_name into self
