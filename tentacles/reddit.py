@@ -54,10 +54,6 @@ class Reddit_Tentacle(Tentacle):
           try:
             response = markov.generate_markov_text(self.response_length + random.randint(-5, 5))
 
-            # Apply some filters to humanize the text
-            response = response.lower()
-            #response = re.sub("[\.\:;\(\)\"\*]", "", response, 0, 0)
-
             if len(response) > 0:
               Tentacle.report(self, 'Responding')
               responded = True

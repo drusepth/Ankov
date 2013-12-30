@@ -1,6 +1,7 @@
 import random
 import pickle
 import os
+import re
 
 from itertools import chain
 
@@ -213,6 +214,40 @@ class Markov(object):
     # Before joining text fragments, we want to filter out our tokens
     tokens = ['<<START>>', '<<END>>']
     text = ' '.join([x for x in text if x is not None]).split()
-    #print(text)
-    #print('rem')
-    return ' '.join([x for x in text if x not in tokens]) # todo combine these two lines?
+    string = ' '.join([x for x in text if x not in tokens]) # todo combine these two lines?
+
+    return self.humanize_text(string)
+
+  # Run a string through some filters meant to make it look more human-written
+  def humanize_text(self, string):
+    #print('Humanizing ' + string)
+
+    # Remove all URLs
+    string = re.sub(r'https?:\/\/[^\s]*', '', string, flags=re.MULTILINE)
+
+    # Remove reddit-style links remaining (i.e.: "[link text](" )
+    # todo
+
+    # Make sure all quotes are closed
+    if string.count('"') % 2 == 1:
+      string = string + '"'
+
+    # Strip out <username>: message, replies (esp. for IRC)
+    if string.find(':') < string.find(' '):
+      string = string[string.index(' ')+1:]
+
+    # Capitalize the first letter after every period
+    sentences = string.split('.')
+    sentences = map((lambda letter: letter.strip().capitalize()), sentences)
+    print(sentences)
+    string = '. '.join(sentences)
+
+    # Capitalize all lonely instances of i
+    string = string.replace(" i ", " I ")
+
+    # Replace remnant . . . from above spliit with ...
+    string = string.replace(". . .", "...")
+
+    print('Humanized: ' + string)
+
+    return string
