@@ -26,7 +26,7 @@ class Markov(object):
   def __init__(self):
     self.graph = {}
     self.graph['<<START>>'] = Node('<<START>>', None)
-    self.ngram = 3 # size of ngrams
+    self.ngram = 5 # size of ngrams
 
   # Serialize self into memory/bank_name
   def save(self, bank_name):
@@ -149,8 +149,12 @@ class Markov(object):
       # If this child doesn't have any children (possible with large ngram sizes),
       # attempt to rectify the situation by pulling in previous words
       max_depth = self.ngram
-      while len(self.graph[current_word].children) == 0 and max_depth > 0:
+      while max_depth > 0:
         max_depth -= 1
+
+        # If children are possible, ignore everything
+        if current_word in self.graph.keys() and len(self.graph[current_word].children) > 0:
+          break
 
         # Because nodes in text can consist of multiple words (when ngram size > 1)
         # rejoin and resplit on each expansion iteration.
@@ -164,14 +168,14 @@ class Markov(object):
           break
 
         current_word = ' '.join([text[-2], current_word])
-        children = self.graph[current_word].children
         
         if current_word in self.graph.keys():
+          children = self.graph[current_word].children
           print("expanding current_word to " + current_word)
 
-        # If adding the word prefix now introduces children, break out early
-        if len(self.graph[current_word].children) > 0:
-          break
+          # If adding the word prefix now introduces children, break out early
+          if len(self.graph[current_word].children) > 0:
+            break
 
       # If it's impossible to move forward in the sentence from here, break early
       if current_word not in self.graph.keys() or len(self.graph[current_word].children) == 0:
