@@ -2,6 +2,7 @@ from threading import Thread
 
 from tentacles.irc import IRC_Tentacle
 from tentacles.reddit import Reddit_Tentacle
+from tentacles.twitter import Twitter_Tentacle
 
 tentacles = []
 
@@ -62,6 +63,11 @@ for vector in reddit_vectors:
   t.daemon = True
   tentacles.append(t)
   t.start()
+
+#tentacle = Twitter_Tentacle({})
+#t = Thread(target = tentacle.start)
+#t.daemon = True
+#t.start()
 
 try:
   while True:
