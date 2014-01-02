@@ -45,6 +45,10 @@ reddit_vectors = [
   {
     'username': 'japlandian',
     'password': '6f2f01539468a88f60877828b0312b04'
+  },
+  {
+    'username': 'fountainsofdongs',
+    'password': '11d22dae093df553a226e28c61df54fa'
   }
 ]
 
