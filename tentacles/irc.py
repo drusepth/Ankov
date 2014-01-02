@@ -72,7 +72,7 @@ class IRC_Tentacle(Tentacle):
           try:
             response = self.markov.generate_markov_text(self.response_length + int(random() * 11) - 5)
 
-            Tentacle.report(self, 'Responding in ' + str(channel))
+            Tentacle.report(self, 'Responding in ' + str(channel) + ': ' + response)
             if len(response) > 0:
               irc.send(' '.join(['PRIVMSG', channel, ':' + response]) + "\r\n")
 
