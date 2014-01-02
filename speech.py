@@ -227,23 +227,17 @@ class Markov(object):
       sentences = map((lambda letter: letter.strip().capitalize()), sentences)
       string = '. '.join(sentences)
 
-    print(string)
-
     # And at the risk of copypasting code, also capitalize after question marks
     sentences = string.split('? ')
     if len(sentences) > 1:
       sentences = map((lambda letter: letter.strip().capitalize()), sentences)
       string = '? '.join(sentences)
 
-    print(string)
-
     # ...and exclamation points
     sentences = string.split('! ')
     if len(sentences) > 1:
       sentences = map((lambda letter: letter.strip().capitalize()), sentences)
       string = '! '.join(sentences)
-
-    print(string)
 
     # Capitalize all lonely instances of i
     string = string.replace(" i ", " I ")
