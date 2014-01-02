@@ -207,6 +207,9 @@ class Markov(object):
   def humanize_text(self, string):
     #print('Humanizing ' + string)
 
+    # Normalize text to lowercase before performing translations
+    string = string.lower()
+
     # Remove all URLs
     string = re.sub(r'https?:\/\/[^\s]*', '', string, flags=re.MULTILINE)
 
@@ -219,7 +222,20 @@ class Markov(object):
 
     # Strip out <username>: message, replies (esp. for IRC)
     if string.find(':') > -1 and string.find(':') < string.find(' '):
-      string = string[string.index(' ')+1:]
+      string = string[string.find(' ')+1:]
+
+    # Strip out @name and @name: replies, (esp. for twitter)
+    if len(string) > 0 and string[0] == '@':
+      string = string[string.find(' ')+1:]
+
+    # Strip out RT @Name: prefixes
+    string = re.sub(r'(?:^|\s)rt @[^\s]*', '', string, flags=re.MULTILINE)
+
+    # Strip out a final via @name
+    string = re.sub(r'via @[^\s]*$', '', string, flags=re.MULTILINE)
+
+    # Strip out all hashtags
+    string = re.sub(r'#[^\s]*', '', string, flags=re.MULTILINE)
 
     # Capitalize the first letter after every period
     sentences = string.split('. ')
@@ -242,11 +258,14 @@ class Markov(object):
     # Capitalize all lonely instances of i
     string = string.replace(" i ", " I ")
 
+    # Replace &amp; with & because wow
+    string = string.replace('&amp;', '&')
+
     # Replace remnant . . . from above spliit with ...
     string = string.replace(". . .", "...")
 
-    # If the last character is a comma, remove it
-    if string[-1] == ',':
+    # If the last character is a comma or some other punctuation, remove it
+    if string[-1] in [',', ':', '-', '@']:
       string = ''.join(list(string)[:-1])
 
     print('Humanized: ' + string)
