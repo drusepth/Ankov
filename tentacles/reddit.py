@@ -6,6 +6,7 @@ import signal
 import sys
 import re
 import os
+import urllib2
 
 import speech
 from tentacle_base import Tentacle
@@ -49,7 +50,7 @@ class Reddit_Tentacle(Tentacle):
             response = markov.generate_markov_text(self.response_length + random.randint(-5, 5))
 
             if len(response) > 0:
-              Tentacle.report(self, 'Responding')
+              Tentacle.report(self, 'Responding with: ' + response)
               responded = True
               comment.reply(response)
               replied_to.append(comment.id)
@@ -58,15 +59,17 @@ class Reddit_Tentacle(Tentacle):
             else:
               Tentacle.report(self, 'Not enough in cache to respond yet')
 
+          except urllib2.HTTPError:
+            Tentacle.report(self, 'Reddit is down omgomgomg')
+            time.sleep(150 + random.randint(0, 400))
+
           except praw.errors.RateLimitExceeded:
             Tentacle.report(self, 'Rate limited')
             time.sleep(150 + random.randint(0, 500))
-            pass
 
           except praw.errors.APIException:
             Tentacle.report(self, 'API Exception')
             time.sleep(150 + random.randint(0, 300))
-            pass
 
         else: # not responding to them, so learn from them
           markov.add_from_string(comment.body)
