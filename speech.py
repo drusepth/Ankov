@@ -229,7 +229,7 @@ class Markov(object):
       string = string[string.find(' ')+1:]
 
     # Strip out RT @Name: prefixes
-    string = re.sub(r'(?:^|\s)rt @[^\s]*', '', string, flags=re.MULTILINE)
+    string = re.sub(r'(?:^|\s)rt @[^\s]* ', '', string, flags=re.MULTILINE)
 
     # Strip out a final via @name
     string = re.sub(r'via @[^\s]*$', '', string, flags=re.MULTILINE)
