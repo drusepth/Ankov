@@ -19,7 +19,8 @@ irc_vectors = [
     'port':   6667,
     'channels': [
       '#c', '##linux', '##overflow', '#freenode', '#perl', '#python', '#ruby', '#ubuntu',
-      '#c#', '#archlinux', '#bitcoin', '#debian', '#haskell', '#gentoo', '#node.js'
+      '#c#', '#archlinux', '#bitcoin', '#debian', '#haskell', '#gentoo', '#node.js',
+      '#redis'
     ]
   },
   {
