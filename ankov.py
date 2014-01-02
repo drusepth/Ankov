@@ -28,7 +28,7 @@ irc_vectors = [
     'server': 'irc.tddirc.net',
     'port':   6667,
     'channels': [
-      '#thunked', '#hackerthreads'
+      '#thunked', '#hackerthreads', '#shells', '#corecraft'
     ]
   }
 ]
@@ -64,10 +64,11 @@ for vector in reddit_vectors:
   tentacles.append(t)
   t.start()
 
-#tentacle = Twitter_Tentacle({})
-#t = Thread(target = tentacle.start)
-#t.daemon = True
-#t.start()
+# Spawn twitter tentacles
+tentacle = Twitter_Tentacle({})
+t = Thread(target = tentacle.start)
+t.daemon = True
+t.start()
 
 try:
   while True:

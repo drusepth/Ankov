@@ -1,8 +1,7 @@
 # feels so java in here
 import time
-from random import random
 import tweetpony
-
+import random
 import speech
 from tentacle_base import Tentacle
 
@@ -28,18 +27,24 @@ class Twitter_Tentacle(Tentacle):
   def start(self):
     Tentacle.report(self, 'Visiting the Twitters')
 
-    self.api.update_status(status = 'hello world ' + str(random()))
+    #self.api.update_status(status = 'hello world ' + str(random()))
 
     while True:
-      results = self.api.search_tweets(q = 'cars')
-      statuses = results['statuses']
+      #results = self.api.search_tweets(q = 'cars')
+      #statuses = results['statuses']
 
-      for status in statuses:
-        print(status.text)
-        humanized = self.markov.humanize_text(status.text)
-        print(humanized)
-        print("\n\n\n")
+      #for status in statuses:
+      #  print(status.text)
+      #  humanized = self.markov.humanize_text(status.text)
+      #  print(humanized)
+      #  print("\n\n\n")
 
-      time.sleep(120)
+      message = self.markov.generate_markov_text()
+      message = (message[:137] + '..') if len(message) > 139 else data
+
+      Tentacle.report(self, 'Tweeting: ' + message)
+      self.api.update_status(status = message)
+
+      time.sleep(150 + random.randint(0, 300))
 
       #self.markov.add_from_string(message)

@@ -268,6 +268,6 @@ class Markov(object):
     if string[-1] in [',', ':', '-', '@']:
       string = ''.join(list(string)[:-1])
 
-    print('Humanized: ' + string)
+    #print('Humanized: ' + string)
 
     return string
