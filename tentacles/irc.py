@@ -21,7 +21,7 @@ class IRC_Tentacle(Tentacle):
     self.identifier = str(self.irc_name) + '@' + str(self.irc_server)
 
     self.response_rate = 0.001     # % to respond to any line
-    self.name_response_rate = 0.70 # % to respond to lines with bot's name
+    self.name_response_rate = 0.80 # % to respond to lines with bot's name
     self.response_length = 6       # has some wiggle room
     self.dictionary_req = 9000     # num words in dictionary before trying to respond
 
