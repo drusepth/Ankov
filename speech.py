@@ -1,6 +1,6 @@
 import random
 import pickle
-import os
+import redis
 import re
 
 from itertools import chain
@@ -8,53 +8,45 @@ from itertools import chain
 # For this graph, you can assume "parents" are all words that come prior
 # to a node's value in a sentence, and "children" are all words that can
 # come afterwards.
-class Node:
-  def __init__(self, value, parent):
-    self.parents  = [parent]
-    self.children = []
-    self.value    = value
-    self.weight   = 1 # todo implement frequency weights
+class Redis:
+  def __init__(self):
+    self.connection = redis.StrictRedis()
+    # todo introduce cache, set each key on get, expire that key on set
 
-  def add_child(self, child):
-    if child not in self.children:
-      self.children.append(child)
+  def add_antecedent(self, key, antecedent):
+    key = str(key) + '_antecedents'
+    self.connection.sadd(key, antecedent)
 
-  def add_parent(self, parent):
-    if parent not in self.parents:
-      self.parents.append(parent)
+  def add_consequent(self, key, consequent):
+    key = str(key) + '_consequents'
+    self.connection.sadd(key, consequent)
+
+  def get_antecedents(self, key):
+    key = str(key) + '_antecedents'
+    return self.connection.smembers(key)
+
+  def get_consequents(self, key):
+    key = str(key) + '_consequents'
+    return self.connection.smembers(key)
+
+  def keys(self):
+    return self.connection.keys()
+
+  def random_key(self):
+    preparsed = self.connection.randomkey()
+
+    # remove _antecedents and _consequents
+    if preparsed.find('_') > -1:
+      preparsed = '_'.join(preparsed.split('_')[:-1])
+
+    return preparsed
 
 class Markov(object):
-
   # Initialize the markov generator object
   def __init__(self):
-    self.graph = {}
-    self.graph['<<START>>'] = Node('<<START>>', None)
-    self.ngram = 4 # size of ngrams
+    self.ngram = 4 # max size of ngrams
 
-  # Serialize self into memory/bank_name
-  def save(self, bank_name):
-    path = 'memory/' + str(bank_name)
-    existing_graph = {}
-
-    # Load the on-disk graph into our live one to prevent clobbering changes
-    if os.path.exists(path):
-      with open(path) as deserialize:
-        existing_graph = pickle.load(deserialize)
-
-    # Merge the two graphs together into a new one
-    # todo merge children/parents rather than just key->value
-    self.graph = dict(chain(existing_graph.items(), self.graph.items()))
-
-    # Save the combined graph to disk
-    with open(path, 'w+') as serialize:
-      pickle.dump(self.graph, serialize)
-
-  # Deserialize memory/bank_name into self
-  def load(self, bank_name):
-    path = 'memory/' + str(bank_name)
-    if os.path.exists(path):
-      with open(path) as serialize:
-        self.graph = pickle.load(serialize)
+    self.redis = Redis()
 
   # Break string down into ngrams and add them to the graph
   def add_from_string(self, string):
@@ -71,33 +63,20 @@ class Markov(object):
       for i in range(0, self.ngram - 1):
         antecedents.append(words[index + i])
 
-      antecedent = ' '.join(antecedents)
-      consequent = words[index + self.ngram - 1]
+        antecedent = ' '.join(antecedents)
+        consequent = words[index + i + 1]
 
-      print(antecedent + " --> " + consequent)
+        #print(antecedent + " --> " + consequent)
 
-      # If the antecedent ("There is...") is not in the graph yet, quickly add it
-      if antecedent not in self.graph.keys():
-        self.graph[antecedent] = Node(antecedent, None)
+        # Because ngram size can be >1, go ahead and reverse-index the antecedent
+        # to point to the previous word, too
+        if index != 0:
+          #print(words[index - 1] + " <-- " + antecedent)
+          self.redis.add_antecedent(antecedent, words[index - 1])
 
-      # Because ngram size can be >1, go ahead and reverse-index the antecedent
-      # to point to the previous word, too
-      if index != 0:
-        #print("adding " + words[index - 1] + " <-- " + antecedent)
-        self.graph[antecedent].add_parent(words[index - 1])
-
-      # If the consequent already exists in the graph, give it an additional parent
-      if consequent in self.graph.keys():
-        self.graph[consequent].add_parent(antecedent)
-
-        # (And give its parent an additional child)
-        self.graph[antecedent].add_child(consequent)
-
-      else:
-        # If the consequent does not already exist in the graph, add it to the graph
-        # and assign it as a child to its parent.
-        self.graph[consequent] = Node(consequent, antecedent)
-        self.graph[antecedent].add_child(consequent)
+        # Add consequent index -- and the reverse
+        self.redis.add_consequent(antecedent, consequent)
+        self.redis.add_antecedent(consequent, antecedent)
 
   # Open a file and feed it into the graph
   def add_from_file(self, filename):
@@ -109,16 +88,15 @@ class Markov(object):
 
   # Returns how many words are in the vocabulary
   def word_size(self):
-    return len(self.graph)
+    return len(self.redis.keys())
 
   # Generate markov chain
   def generate_markov_text(self, size=25, starter=None):
     current_word = starter
 
     # If the starter word isn't known, pick a random one instead
-    if starter is None or current_word.split()[0] not in self.graph.keys():
-      keys = self.graph.keys()
-      current_word = keys[random.randint(0, len(keys) - 1)]
+    if len(self.redis.get_consequents(starter)) == 0:
+      current_word = self.redis.random_key()
       starter = current_word
 
     text = [current_word]
@@ -128,27 +106,29 @@ class Markov(object):
     # Begin building the string to the left, until we hit a <<START>> token.
     # To avoid continuously prepending to an array, we're going to append to
     # one and then reverse it all at once afterwards.
-    while current_word != None and current_word in self.graph.keys() and len(text) <= size:
-      # Fetch a list of all parents
-      if len(self.graph[current_word].parents) > 1:
-        # Disallow None parents if there are any other potential parents
-        parents = [x for x in self.graph[current_word].parents if x is not None]
-      else:
-        parents = self.graph[current_word].parents
 
-      #print("parents:")
-      #print(parents)
+    while current_word != '<<START>>' and \
+          len(self.redis.get_antecedents(current_word)) > 0 and \
+          len(text) <= size:
+
+      # Fetch a list of all parents
+      antecedents = self.redis.get_antecedents(current_word)
+
+      # No known antecedents, move on
+      if len(antecedents) == 0:
+        break
 
       # Choose one at random, and step to it. Because everything except our
       # start token should have a parent, we're going to forgo a check here
       # and assume len(parents) > 0.
-      parent = parents[random.randint(0, len(parents) - 1)]
-      if parent != None:
-        text.append(parent)
-      current_word = parent
+      antecedent = random.sample(antecedents, 1)[0]
+      text.append(antecedent)
+      current_word = antecedent
+
+      # todo need to absorb words going forward too
 
       #print("chose:")
-      #print(parent)
+      #print(antecedent)
 
     # After we finally reach a start token, go ahead and reverse the array
     # to put the words in the correct order, before moving on to the second
@@ -158,6 +138,7 @@ class Markov(object):
     #print("message progress at mid: ")
     #print(text)
 
+    #print(starter)
     current_word = starter
     #print("starting back at mid: " + current_word)
     #while len(self.graph[current_word].children) > 0:
@@ -165,11 +146,12 @@ class Markov(object):
       # If this child doesn't have any children (possible with large ngram sizes),
       # attempt to rectify the situation by pulling in previous words
       max_depth = self.ngram
+      absorbtion_index = -2 # index of word to absorb, increases as we absorb
       while max_depth > 0:
         max_depth -= 1
 
         # If children are possible, ignore everything
-        if current_word in self.graph.keys() and len(self.graph[current_word].children) > 0:
+        if len(self.redis.get_consequents(current_word)) > 0:
           break
 
         # Because nodes in text can consist of multiple words (when ngram size > 1)
@@ -178,44 +160,47 @@ class Markov(object):
         #print("text is ")
         #print(text)
 
+        #print('current_word is')
+        #print(current_word)
+
         # If there are no more words to expand, don't try to absorb more
         if len(current_word.split()) >= len(text):
           print('not enough words to absorb')
           break
 
-        current_word = ' '.join([text[-2], current_word])
-        
-        if current_word in self.graph.keys():
-          children = self.graph[current_word].children
-          #print("expanding current_word to " + current_word)
+        current_word = ' '.join([text[absorbtion_index], current_word])
+        #print('after set, current_word is ' + current_word)
+        absorbtion_index -= 1
 
-          # If adding the word prefix now introduces children, break out early
-          if len(self.graph[current_word].children) > 0:
-            break
+      #print("out of absorbtion loop")
 
       # If it's impossible to move forward in the sentence from here, break early
-      if current_word not in self.graph.keys() or len(self.graph[current_word].children) == 0:
+      if len(self.redis.get_consequents(current_word)) == 0:
         break
 
       # Fetch a list of all possible children
-      children = self.graph[current_word].children
+      children = self.redis.get_consequents(current_word)
+      #print("children are ")
+      #print(children)
 
       # Choose one randomly and step in
-      child = children[random.randint(0, len(children) - 1)]
-      #print("chose child: " + child)
+      child = random.sample(children, 1)
+      #print("chose child: ")
+      #print(child)
 
       # Because a child might have been expanded, only take the last word of it to append
-      text.append(child.split()[-1])
-      current_word = child
+      text.append(child[0].split()[-1])
+      current_word = child[0]
 
     #print('generated')
     #print(text)
 
     # Before joining text fragments, we want to filter out our tokens
     tokens = ['<<START>>', '<<END>>']
-    text = ' '.join([x for x in text if x is not None]).split()
-    string = ' '.join([x for x in text if x not in tokens]) # todo combine these two lines?
+    #print(text)
+    string = ' '.join([x for x in ' '.join(text).split() if x not in tokens])
 
+    #print('humanizing ' + string)
     return self.humanize_text(string)
 
   # Run a string through some filters meant to make it look more human-written
@@ -233,25 +218,22 @@ class Markov(object):
       string = string + '"'
 
     # Strip out <username>: message, replies (esp. for IRC)
-    if string.find(':') < string.find(' '):
+    if string.find(':') > -1 and string.find(':') < string.find(' '):
       string = string[string.index(' ')+1:]
 
     # Capitalize the first letter after every period
     sentences = string.split('.')
     sentences = map((lambda letter: letter.strip().capitalize()), sentences)
-    print(sentences)
     string = '. '.join(sentences)
 
     # And at the risk of copypasting code, also capitalize after question marks
     sentences = string.split('?')
     sentences = map((lambda letter: letter.strip().capitalize()), sentences)
-    print(sentences)
     string = '? '.join(sentences)
 
     # ...and exclamation points
     sentences = string.split('!')
     sentences = map((lambda letter: letter.strip().capitalize()), sentences)
-    print(sentences)
     string = '! '.join(sentences)
 
     # Capitalize all lonely instances of i
@@ -259,6 +241,10 @@ class Markov(object):
 
     # Replace remnant . . . from above spliit with ...
     string = string.replace(". . .", "...")
+
+    # If the last character is a comma, remove it
+    if string[-1] == ',':
+      string = ''.join(list(string)[:-1])
 
     print('Humanized: ' + string)
 

@@ -24,13 +24,7 @@ class Reddit_Tentacle(Tentacle):
     self.identifier = self.username
 
   def start(self):
-    Tentacle.report(self, 'Building starter markov dictionary')
     markov = speech.Markov()
-    try:
-      markov.load("reddit")
-    except:
-      markov.add_from_string("Hello")
-    Tentacle.report(self, 'Good to go')
 
     Tentacle.report(self, 'Logging in to Reddit')
     r = praw.Reddit(user_agent=self.useragent)
@@ -78,8 +72,5 @@ class Reddit_Tentacle(Tentacle):
           markov.add_from_string(comment.body)
           Tentacle.report(self, markov.word_size())
 
-      Tentacle.report(self, 'Done looking through comments, saving dictionary')
-      markov.save('reddit')
-
-      Tentacle.report(self, 'And sleeping until later')
+      Tentacle.report(self, 'Sleeping until later')
       time.sleep(300 + random.randint(300, 600))

@@ -26,11 +26,6 @@ class IRC_Tentacle(Tentacle):
     self.dictionary_req = 1000     # num words in dictionary before trying to respond
 
     self.markov = speech.Markov()
-    try:
-      self.markov.load("irc")
-    except:
-      self.markov.add_from_string("Hello")
-
     self.replied_to = []
 
 
@@ -86,9 +81,3 @@ class IRC_Tentacle(Tentacle):
 
         else: # Learn from IRC too!
           self.markov.add_from_string(message)
-
-      try:
-        if random() < 0.1:
-          self.markov.save("irc")
-      except:
-        Tentacle.report(self, 'Could not save markov database, will try again later')
