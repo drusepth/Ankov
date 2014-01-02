@@ -15,7 +15,7 @@ class Reddit_Tentacle(Tentacle):
   def __init__(self, config):
     self.response_rate = 0.001 # %
     self.response_length = 12   # has some wiggle room
-    self.dictionary_req = 2000 # num words in dictionary before trying to respond
+    self.dictionary_req = 5000 # num words in dictionary before trying to respond
 
     self.useragent = 'the internet beast by /u/drusepth'
 

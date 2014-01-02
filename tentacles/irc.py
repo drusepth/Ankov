@@ -23,7 +23,7 @@ class IRC_Tentacle(Tentacle):
     self.response_rate = 0.001     # % to respond to any line
     self.name_response_rate = 0.70 # % to respond to lines with bot's name
     self.response_length = 6       # has some wiggle room
-    self.dictionary_req = 1000     # num words in dictionary before trying to respond
+    self.dictionary_req = 2500     # num words in dictionary before trying to respond
 
     self.markov = speech.Markov()
     self.replied_to = []
