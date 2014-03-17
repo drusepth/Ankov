@@ -40,7 +40,7 @@ class Twitter_Tentacle(Tentacle):
       #  print("\n\n\n")
 
       message = self.markov.generate_markov_text()
-      message = (message[:137] + '..') if len(message) > 139 else data
+      message = (message[:137] + '..') if len(message) > 139 else message
 
       Tentacle.report(self, 'Tweeting: ' + message)
       self.api.update_status(status = message)
