@@ -12,7 +12,7 @@ irc_vectors = [
     'port':   6667,
     'channels': [
       '#ankov',
-      '#interns'
+      #'#interns'
     ]
   },
   {
@@ -24,13 +24,13 @@ irc_vectors = [
       '#redis'
     ]
   },
-  {
-    'server': 'irc.tddirc.net',
-    'port':   6667,
-    'channels': [
-      '#thunked', '#hackerthreads', '#shells', '#corecraft'
-    ]
-  }
+  #{
+  #  'server': 'irc.tddirc.net',
+  #  'port':   6667,
+  #  'channels': [
+  #    '#thunked', '#hackerthreads', '#shells', '#corecraft'
+  #  ]
+  #}
 ]
 
 reddit_vectors = [

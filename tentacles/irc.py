@@ -7,10 +7,9 @@ import re
 import os
 import socket
 
-import speech
+from speech.markov import Markov
 from tentacle_base import Tentacle
 
-#class IRC_Tentacle():
 class IRC_Tentacle(Tentacle):
   def __init__(self, config):
     self.irc_server   = config['server']
@@ -25,7 +24,7 @@ class IRC_Tentacle(Tentacle):
     self.response_length = 6       # has some wiggle room
     self.dictionary_req = 9000     # num words in dictionary before trying to respond
 
-    self.markov = speech.Markov()
+    self.markov = Markov()
     self.replied_to = []
 
 

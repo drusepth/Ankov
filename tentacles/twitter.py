@@ -2,12 +2,13 @@
 import time
 import tweetpony
 import random
-import speech
+
+from speech.markov import Markov
 from tentacle_base import Tentacle
 
 class Twitter_Tentacle(Tentacle):
   def __init__(self, config):
-    self.markov = speech.Markov()
+    self.markov = Markov()
 
     self.consumer_key = "6ilNIBBHz9ADYwFsaOgZw"
     self.consumer_secret = "0vajGMysk5d7UcttkJVilGEgJJVYXjffB7efagGxZs"

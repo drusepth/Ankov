@@ -8,7 +8,7 @@ import re
 import os
 import urllib2
 
-import speech
+from speech.markov import Markov
 from tentacle_base import Tentacle
 
 class Reddit_Tentacle(Tentacle):
@@ -25,7 +25,7 @@ class Reddit_Tentacle(Tentacle):
     self.identifier = self.username
 
   def start(self):
-    markov = speech.Markov()
+    markov = Markov()
 
     Tentacle.report(self, 'Logging in to Reddit')
     r = praw.Reddit(user_agent=self.useragent)
