@@ -30,12 +30,9 @@ class Markov(object):
         antecedent = ' '.join(antecedents)
         consequent = words[index + i + 1]
 
-        #print(antecedent + " --> " + consequent)
-
         # Because ngram size can be >1, go ahead and reverse-index the antecedent
         # to point to the previous word, too
         if index != 0:
-          #print(words[index - 1] + " <-- " + antecedent)
           self.redis.add_antecedent(antecedent, words[index - 1])
 
         # Add consequent index -- and the reverse
@@ -65,8 +62,6 @@ class Markov(object):
 
     text = [current_word]
 
-    #print("staring with " + current_word)
-
     # Begin building the string to the left, until we hit a <<START>> token.
     # To avoid continuously prepending to an array, we're going to append to
     # one and then reverse it all at once afterwards.
@@ -90,22 +85,13 @@ class Markov(object):
       current_word = antecedent
 
       # todo need to absorb words going forward too
-
-      #print("chose:")
-      #print(antecedent)
-
+      
     # After we finally reach a start token, go ahead and reverse the array
     # to put the words in the correct order, before moving on to the second
     # half of the sentence to generate.
     text.reverse()
 
-    #print("message progress at mid: ")
-    #print(text)
-
-    #print(starter)
     current_word = starter
-    #print("starting back at mid: " + current_word)
-    #while len(self.graph[current_word].children) > 0:
     while current_word != '<<END>>' and len(text) <= size:
       # If this child doesn't have any children (possible with large ngram sizes),
       # attempt to rectify the situation by pulling in previous words
@@ -121,11 +107,6 @@ class Markov(object):
         # Because nodes in text can consist of multiple words (when ngram size > 1)
         # rejoin and resplit on each expansion iteration.
         text = ' '.join(text).split()
-        #print("text is ")
-        #print(text)
-
-        #print('current_word is')
-        #print(current_word)
 
         # If there are no more words to expand, don't try to absorb more
         if len(current_word.split()) >= len(text):
@@ -133,10 +114,7 @@ class Markov(object):
           break
 
         current_word = ' '.join([text[absorbtion_index], current_word])
-        #print('after set, current_word is ' + current_word)
         absorbtion_index -= 1
-
-      #print("out of absorbtion loop")
 
       # If it's impossible to move forward in the sentence from here, break early
       if len(self.redis.get_consequents(current_word)) == 0:
@@ -144,33 +122,23 @@ class Markov(object):
 
       # Fetch a list of all possible children
       children = self.redis.get_consequents(current_word)
-      #print("children are ")
-      #print(children)
-
+      
       # Choose one randomly and step in
       child = random.sample(children, 1)
-      #print("chose child: ")
-      #print(child)
 
       # Because a child might have been expanded, only take the last word of it to append
       text.append(child[0].split()[-1])
       current_word = child[0]
 
-    #print('generated')
-    #print(text)
-
     # Before joining text fragments, we want to filter out our tokens
     tokens = ['<<START>>', '<<END>>']
-    #print(text)
     string = ' '.join([x for x in ' '.join(text).split() if x not in tokens])
 
-    #print('humanizing ' + string)
     return self.humanize_text(string)
 
   # Run a string through some filters meant to make it look more human-written
-  def humanize_text(self, string):
-    #print('Humanizing ' + string)
-
+  def humanize_text(self, string): # todo move to somewhere more reusable
+    
     # Normalize text to lowercase before performing translations
     string = string.lower()
 
@@ -231,7 +199,5 @@ class Markov(object):
     # If the last character is a comma or some other punctuation, remove it
     if string[-1] in [',', ':', '-', '@']:
       string = ''.join(list(string)[:-1])
-
-    #print('Humanized: ' + string)
 
     return string
